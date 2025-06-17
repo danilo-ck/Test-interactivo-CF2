@@ -1,1 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Interactivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #444;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1, h2, h3 {
+            margin-bottom: 10px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .answer {
+            display: block;
+            background-color: #555;
+            color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .answer:hover {
+            background-color: #777;
+        }
+        #next-button, #start-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #next-button:hover, #start-button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        #score-container {
+            display: none;
+        }
+        #incorrect-questions-container {
+            display: none;
+            margin-top: 20px;
+        }
+        ul {
+            padding-left: 0;
+            list-style-type: none;
+            text-align: left;
+        }
+        ul li {
+            margin-bottom: 5px;
+        }
+        #reset-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
 
+#reset-button:hover {
+    background-color: #c82333;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tests CF2</h1>
+        <h2 id="author-name">Daniel Farré Avilés</h2>
+        <div id="question-container">
+            <p id="question">Haz click en "Comenzar Test" para empezar. Disfruta</p>
+            <div id="question-options"></div> <!-- Aquí se mostrarán las opciones de respuesta -->
+        </div>
+        <div class="button-container" id="answer-buttons" style="display: none;">
+            <!-- No se necesitan botones aquí para las opciones -->
+        </div>
+        <button id="next-button" onclick="nextQuestion()" style="display: none;">Siguiente Pregunta</button>
+        <div>
+            <p>Respondidas: <span id="answered-count">0</span></p>
+            <p>Aciertos: <span id="correct-count">0</span></p>
+            <p>Fallos: <span id="incorrect-count">0</span></p>
+            <p>Preguntas disponibles: <span id="available-questions-count">0</span></p>
+            <p id="score-container" style="display: none;">Nota: <span id="score">0</span></p>
+        </div>
+        <div id="incorrect-questions-container" style="display: none;">
+            <h3>Preguntas falladas:</h3>
+            <ul id="incorrect-questions-list"></ul>
+        </div>
+        <button id="start-button" onclick="startTest()">Comenzar Test</button>
+        
+    </div>
+
+    <script>
+        const allQuestions = [
+
+    {
+    question: "Un instrumento financiero implica siempre:",
+    options: [
+        "a) Un elemento de activo para una empresa y un elemento de patrimonio neto para otra.",
+        "b) Un derecho de cobro para una empresa y una obligación de pago para otra.",
+        "c) Un contrato que da lugar a un activo financiero en una empresa y, simultáneamente, a un pasivo financiero o a un instrumento de patrimonio en otra empresa.",
+        "d) Una inversión en títulos/valores que siempre generarán rentabilidad positiva a la empresa."
+    ],
+    correct: "c"
+    },
+    {
+    question: "El PGC 2007 distingue a los activos financieros para su valoración de acuerdo a:",
+    options: [
+        "a) Su instrumentación jurídica, distinguiendo así entre elementos de patrimonio neto e instrumentos de activos financieros.",
+        "b) Su naturaleza, distinguiendo elementos de activo financiero de renta variable y de renta fija.",
+        "c) La intencionalidad de uso que la empresa que posee el activo financiero pretende hacer con él.",
+        "d) Siempre se valorarán según su valor de mercado el día de la transacción de compra, considerándose los gastos aparejados como ajenos a la transacción."
+    ],
+    correct: "c"
+    },
+    {
+    question: "Según el Plan General de Contabilidad de 2007, a efectos de su valoración, la adquisición de acciones u obligaciones de una sociedad que cotiza en bolsa deberá clasificarse dentro de la cartera de:",
+    options: [
+        "a) Préstamos y partidas a cobrar, ya que es un préstamo que hacemos al emisor de los títulos.",
+        "b) Inversiones a coste amortizado, activos financieros a VR con cambios en PyG,  o activos financieros a VR con cambios en el PN de acuerdo con la intencionalidad de la empresa con respecto a las acciones u obligaciones adquiridas.",
+        "c) Inversiones valoradas a coste o inversiones a VR con cambios en el PN.",
+        "d) Se incluirán en la cartera de Activos a Coste en cualquier caso, y posteriormente se reclasificarán a la cartera definitiva que más interese a la empresa."
+    ],
+    correct: "b"
+    },
+    {
+    question: "Los activos financieros a VR con cambios en PN se valorarán inicialmente:",
+    options: [
+        "a) A su valor razonable más los costes de transacción.",
+        "b) A su valor razonable menos los costes de transacción.",
+        "c) A su valor razonable. Los costes de transacción serán gastos del ejercicio en el que se adquieran tales activos financieros.",
+        "d) A su valor razonable que no incluirá ningún concepto adicional."
+    ],
+    correct: "a"
+    },
+    {
+    question: "Los intereses devengados y no vencidos en el momento de la adquisición de una obligación de una empresa:",
+    options: [
+        "a) Formarán parte del valor inicial de dicho activo financiero para la empresa que adquiere dicha obligación.",
+        "b) Deberán reflejarse de manera independiente como un derecho de cobro para la empresa que adquiere dicha obligación no entrando, por tanto, como parte de la valoración inicial del activo financiero.",
+        "c) Deberán contabilizarse como gasto de la empresa que adquiere la obligación ya que este importe debe pagárselo al vendedor de la misma, que es el que ha generado previamente dicho interés.",
+        "d) Las obligaciones sólo generan dividendos, por tanto, esta situación no puede presentar."
+    ],
+    correct: "b"
+    },
+    {
+    question: "Adquiero acciones con la intención de venderlas en el corto plazo. ¿En qué cartera se clasifican?",
+    options: [
+        "a) Activos financieros a VR con cambios en PN.",
+        "b) Activos financieros a VR con cambios en PyG.",
+        "c) Activos financieros a Coste Amortizado.",
+        "d) No se incluyen específicamente en ninguna cartera, ya que su permanencia en la empresa no va a ser significativa."
+    ],
+    correct: "b"
+    },
+    {
+    question: "La valoración posterior de los préstamos concedidos y otras partidas a cobrar se hará:",
+    options: [
+        "a) A coste amortizado, imputándose los intereses devengados a pérdidas y ganancias según el método de interés efectivo, si bien si es por una operación comercial a menos de un año y sin interés contractual se puede valorar al nominal.",
+        "b) A valor razonable de la contraprestación más los gastos de transacción.",
+        "c) A coste amortizado, imputándose los intereses devengados a pérdidas y ganancias según el método de interés efectivo, si bien si es por una operación comercial a menos de un año y sin interés contractual se debe valorar al nominal.",
+        "d) A valor razonable menos los gastos de la transacción."
+    ],
+    correct: "a"
+    },
+    {
+    question: "Inversiones a VR con cambios en PN son:",
+    options: [
+        "a) Valores representativos de deuda (obligaciones/bonos), que la empresa tenga la intención efectiva y la capacidad de conservarlos hasta su vencimiento.",
+        "b) Valores representativos de deuda (obligaciones/bonos), así como instrumentos de patrimonio (acciones), que la empresa tenga la intención efectiva y la capacidad de conservarlos hasta su vencimiento o mantenerlos a largo plazo.",
+        "c) Valores representativos de deuda (obligaciones) que la empresa tenga la intención efectiva y la capacidad de conservarlos hasta su vencimiento, o, si no tuvieran fecha de vencimiento fijada, en el largo plazo.",
+        "d) Acciones de otras empresas filiales, del grupo o asociadas, cuyo valor razonable no pueda determinarse con fiabilidad."
+    ],
+    correct: "b"
+    },
+    {
+    question: "La valoración inicial de los activos financieros a VR con cambios en PyG será:",
+    options: [
+        "a) Por el valor razonable de la contraprestación de la transacción más los gastos de transacción.",
+        "b) Por el valor razonable de la contraprestación de la transacción, sin incluir los gastos de transacción que se llevaran a pérdidas y ganancias.",
+        "c) Por el valor razonable de la contraprestación de la transacción, sin incluir los gastos de transacción que se llevaran a patrimonio neto.",
+        "d) Ninguna de las anteriores."
+    ],
+    correct: "b"
+    },
+    {
+    question: "La valoración posterior de los activos financieros a VR con cambios en PN será:",
+    options: [
+        "a) A valor razonable sin deducir gastos de enajenación. Los cambios se llevarán a pérdidas y ganancias.",
+        "b) A valor razonable sin deducir gastos de enajenación. Los cambios se llevarán a patrimonio neto hasta su baja o deterioro; entonces se llevarán a pérdidas y ganancias.",
+        "c) A valor razonable deduciendo los gastos de enajenación. Los cambios se llevarán a patrimonio neto hasta su baja o deterioro; entonces se llevarán a pérdidas y ganancias.",
+        "d) Ninguna de las anteriores."
+    ],
+    correct: "b"
+    },
+    {
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) Para los “Préstamos y Partidas a Cobrar” la valoración posterior a la inicial se realizará por su valor razonable.",
+    "b) Para los “Préstamos y Partidas a Cobrar” la valoración posterior a la inicial se realizará a coste amortizado. No obstante, los créditos por operaciones comerciales con vencimiento no superior a un año y que no tengan un tipo de interés contractual, así como los anticipos y créditos al personal, los dividendos a cobrar y los desembolsos exigidos sobre instrumentos de patrimonio, cuyo importe se espera recibir en el corto plazo, se podrán valorar por su valor nominal cuando el efecto de no actualizar los flujos de efectivo no sea significativo.",
+    "c) Para los  “Préstamos y Partidas a Cobrar” la valoración posterior a la inicial se realizará por su valor razonable. No obstante, los créditos por operaciones comerciales con vencimiento no superior a un año y que no tengan un tipo de interés contractual, así como los anticipos y créditos al personal, los dividendos a cobrar y los desembolsos exigidos sobre instrumentos de patrimonio, cuyo importe se espera recibir en el corto plazo, se podrán valorar por su valor nominal cuando el efecto de no actualizar los flujos de efectivo no sea significativo.",
+    "d) Para los “Préstamos y Partidas a  Cobrar” la valoración posterior  a la inicial se realizará a valor razonable, sin incluir los intereses devengados en ningún caso."
+  ],
+  correct: "b"
+},
+{
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) En los activos financieros incluidos en la categoría “A VR con cambios en PN” la valoración posterior a la inicial se realizará por su valor razonable.  Y las diferencias en que se pudiera incurrir se imputarán a la cuenta de PyG.",
+    "b) En los activos financieros incluidos en la categoría “A VR con cambios en PN” la valoración posterior a la inicial se realizará por su coste amortizado.",
+    "c) En los activos financieros incluidos en la categoría “A VR con cambios en PN” la valoración posterior a la inicial se realizará por su valor razonable, sin deducir los costes de transacción en que se pudiera incurrir en su enajenación. Los cambios que se produzcan en el valor razonable se registrarán directamente en el patrimonio neto, hasta que el activo financiero cause baja del balance o se deteriore, momento en que el importe así reconocido se imputará a la cuenta de pérdidas y ganancias.",
+    "d) Ninguna de las tres opciones anteriores son correctas."
+  ],
+  correct: "c"
+},
+{
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) En los activos financieros incluidos en la categoría “AF a VR con cambios en PyG” la valoración posterior a la inicial se realizará por su valor razonable. Los cambios que se puedan producir en la valoración, se imputarán directamente a la cuenta de PyG.",
+    "b) En los activos financieros incluidos en la categoría “AF a VR con cambios en PyG” la valoración posterior a la inicial se realizará por su coste amortizado. Los cambios que se puedan producir en la valoración, se imputarán directamente a la cuenta de PyG.",
+    "c) En los activos financieros incluidos en la categoría “AF a VR con cambios en PyG” la valoración posterior a la inicial se realizará por su valor razonable, sin deducir los costes de transacción en que se pudiera incurrir en su enajenación. Los cambios que se produzcan en el valor razonable se registrarán directamente en el patrimonio neto, hasta que el activo financiero cause baja del balance o se deteriore, momento en que el importe así reconocido se imputará a la cuenta de pérdidas y ganancias.",
+    "d) Ninguna de las tres opciones anteriores son correctas"
+  ],
+  correct: "a"
+},
+{
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) En los activos financieros incluidos en la categoría “Activos Financieros a coste amortizado” la valoración posterior a la inicial se realizará por su valor razonable. Los costes de transacción que les sean directamente atribuibles se reconocerán en la cuenta de pérdidas y ganancias del ejercicio.",
+    "b) En los activos financieros incluidos en la categoría “Activos Financieros a coste amortizado” la valoración posterior a la inicial se realizará por su coste amortizado. Los intereses devengados se contabilizarán en la cuenta de pérdidas y ganancias aplicando el método del tipo de interés efectivo.",
+    "c) En los activos financieros incluidos en la categoría “Activos Financieros a coste amortizado” la valoración posterior a la inicial se realizará por su valor razonable, sin deducir los costes de transacción en que se pudiera incurrir en su enajenación. Los cambios que se produzcan en el valor razonable se registrarán directamente en el patrimonio neto, hasta que el activo financiero cause baja del balance o se deteriore, momento en que el importe así reconocido se imputará a la cuenta de pérdidas y ganancias.",
+    "d) Ninguna de las tres opciones anteriores son correctas"
+  ],
+  correct: "b"
+},
+{
+  question: "Según el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007, en las valoraciones posteriores a la inicial, ¿qué criterio de valoración ha de emplearse para valorar unas acciones adquiridas con el propósito de especular con ellas y enajenarlas a corto plazo?:",
+  options: [
+    "a. Precio de adquisición.",
+    "b. Valor actual.",
+    "c. Valor razonable.",
+    "d. Coste amortizado."
+  ],
+  correct: "c"
+},
+{
+  question: "De los que se señalan a continuación, ¿cuál es un instrumento de patrimonio según el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007?:",
+  options: [
+    "a. Una obligación.",
+    "b. Una acción.",
+    "c. Un empréstito",
+    "d. Un bono."
+  ],
+  correct: "b"
+},
+{
+  question: "Los aumentos en el valor razonable de los activos financieros a VR con cambios en PyG:",
+  options: [
+    "a) Se registrarán como aumento de las reservas del balance.",
+    "b) Se registrarán como ingresos del periodo en el que se compró el activo, independientemente de cuándo se hayan generado esos aumentos.",
+    "c) No deben registrarse contablemente hasta la venta del activo.",
+    "d) Se registrarán como ingresos del periodo en el que se produzcan, imputándose por tanto a resultados de ese periodo."
+  ],
+  correct: "b"
+},
+{
+  question: "Los intereses devengados por préstamos y partidas a cobrar:",
+  options: [
+    "a) Se imputan a resultados del ejercicio considerando el tipo de interés efectivo.",
+    "b) Se imputan a resultados del ejercicio considerando el tipo de interés nominal.",
+    "c) Se registran con abono a una cuenta de reservas.",
+    "d) Serán soportados por la parte que asuma los costes iniciales de la transacción."
+  ],
+  correct: "a"
+},
+{
+  question: "Los gastos relativos a una adquisición de acciones realizada con el propósito de colocar excedentes de tesorería para obtener una rentabilidad a corto plazo  (fines especulativos):",
+  options: [
+    "a) Incrementan el valor inicial por el que las acciones se registrarán en el balance de situación.",
+    "b) Se consideran gasto del ejercicio.",
+    "c) Se contabilizan directamente como una disminución en las reservas del ejercicio en que se realiza la adquisición.",
+    "d) Se imputarán a reservas."
+  ],
+  correct: "b"
+},
+{
+  question: "En cuanto a la reclasificación de los Activos financieros, señale la respuesta correcta:",
+  options: [
+    "a) Cuando la empresa cambie la forma en que gestiona sus activos financieros, podrá reclasificar todos los activos financieros afectados.",
+    "b) Cuando la empresa cambie la forma en que gestiona sus activos financieros, sólo podrá reclasificar algunos de los activos financieros, y según los criterios establecidos en el PGC para cada tipo de activo.",
+    "c) No se pueden reclasificar los activos financieros.",
+    "d) Sólo se deberá informar en la memoria.   No hay que adoptar ninguna otra medida contable."
+  ],
+  correct: "b"
+},
+{
+  question: "Los intereses y dividendos de activos financieros devengados con posterioridad al momento de la adquisición:",
+  options: [
+    "a) Se reconocerán como ingresos del patrimonio neto, directamente en cuenta de grupo 9.",
+    "b) Se reconocerán como ingresos en la cuenta de PyG, directamente en cuenta de grupo 7.",
+    "c) Se reconocerán como ingresos de patrimonio neto, directamente en cuenta de reservas.",
+    "d) Ninguna de las opciones resulta correcta."
+  ],
+  correct: "b"
+},
+{
+  question: "En la valoración inicial de los activos financieros valorados a coste,",
+  options: [
+    "a) Los activos se valorarán inicialmente a coste amortizado, que equivaldrá al valor razonable de la contraprestación entregada más los costes de la transacción directamente atribuibles.",
+    "b) Los activos se valorarán inicialmente a valor razonable, que equivaldrá al valor razonable de la contraprestación entregada menos los costes de la transacción directamente atribuibles.",
+    "c) Los activos se valorarán inicialmente al valor razonable de la contraprestación entregada más los costes de transacción que les sean directamente atribuibles.",
+    "d) Estos activos financieros no se registran, ya que su valoración nunca es fiable."
+  ],
+  correct: "c"
+},
+{
+  question: "La clasificación de los activos financieros habrá de hacerse por parte de la empresa:",
+  options: [
+    "a) Agrupándolos en función de su vencimiento, sin tener en cuenta su naturaleza.",
+    "b) Agrupándolos por su naturaleza, a través de carteras.",
+    "c) Agrupándolos según los rendimientos o flujos de efectivos esperados de cada uno de los activos, independientemente de su vencimiento o de su naturaleza.",
+    "d) No se hará ninguna agrupación ni clasificación especial con los activos que posea la empresa."
+  ],
+  correct: "b"
+},
+{
+  question: "En todo caso, se incluyen en la categoría de Activos Financieros a Coste:",
+  options: [
+    "a) Cualquier activo financiero que inicialmente procediese clasificar en la cartera de Coste Amortizado,  cuando no sea posible obtener una estimación fiable de su valor razonable.",
+    "b) Cualquier activo financiero que inicialmente procediese clasificar en la cartera de Valor Razonable con cambios en cuenta de PyG cuando no sea posible obtener una estimación fiable de su valor razonable.",
+    "c) Los activos financieros adquiridos en mercados no sujetos a cotización oficial, ni sometidos a control por parte de las autoridades financieras.",
+    "d) Sólo a) y c) son válidas."
+  ],
+  correct: "b"
+},
+{
+  question: "Cuando una empresa adquiere un instrumento de patrimonio (acción), cuyo valor razonable o valor de mercado no se puede determinar de manera fiable:",
+  options: [
+    "a) Se deberá clasificar dentro de la cartera de Activos Financiero a Valor razonable con cambios en la cuenta de PyG.",
+    "b) Se deberá clasificar dentro de la cartera de Activos Financieros a Valor razonable con cambios en patrimonio neto.",
+    "c) Se deberá clasificar dentro de la cartera de Activos Financieros a Coste.",
+    "d) Si el título /acción genera intereses periódicos, se incluirá en la cartera de Activos Fros. A Coste Amortizado."
+  ],
+  correct: "c"
+},
+{
+  question: "El Coste Amortizado:",
+  options: [
+    "a) Utiliza el interés efectivo para la actualización",
+    "b) Utiliza el interés nominal para la actualización",
+    "c) Utiliza el interés nominal y el interés implícito para la actualización.",
+    "d) Sólo utiliza el interés explícito y el implícito para la actualización."
+  ],
+  correct: "a"
+},
+{
+  question: "Una empresa posee una acción que compró con fines especulativos el 01/10/x1 por 100 €.  Al cierre del ejercicio, el valor razonable de la acción es de 90 €. A efectos contables, la empresa considerará la diferencia de cotización:",
+  options: [
+    "a) Como Deterioro del valor del activo, ya que el valor contable o en libros es superior al valor de mercado.",
+    "b) Como una pérdida que imputará a la cuenta de pérdidas y ganancias.",
+    "c) Como una pérdida que imputará al Patrimonio Neto.",
+    "d) La permanencia de la acción en la empresa es a corto plazo, por tanto no se hará ningún ajuste de su valor."
+  ],
+  correct: "b"
+},
+{
+  question: "En la valoración posterior de los Activos Financieros a Valor Razonable con cambios en la cuenta de Pérdidas y Ganancias, las diferencias del valor de un activo adquirido con motivos de negociación/especulación,  se contabilizarán:",
+  options: [
+    "a) Como pérdida o beneficio en Pérdidas y Ganancias",
+    "b) Estas diferencias surgen de los intereses devengados por los títulos tras su valoración a coste amortizado.  Y se contabilizarán en la cuenta de PyG.",
+    "c) Para estos títulos no habrá diferencias en la valoración posterior, puesto que su valor inicial es conocido y constante hasta el vencimiento, momento en el que se produzca el reembolso total de la inversión.",
+    "d) Siempre con imputación de esa diferencia producida a la cuenta de reservas de la empresa, y se informará en la Memoria."
+  ],
+  correct: "a"
+},
+{
+  question: "Según el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007, ¿en qué categoría o cartera no está contemplado el reconocimiento de deterioro de valor?:",
+  options: [
+    "a. Activos financieros a coste amortizado.",
+    "b. Activos financieros mantenidos para la venta.",
+    "c. Activos financieros mantenidos para negociar.",
+    "d. Activos financieros a coste"
+  ],
+  correct: "c"
+},
+{
+  question: "Conforme al Plan General de Contabilidad 2007 y al Plan General de Contabilidad de PYMES 2007, los cambios en el valor razonable de los instrumentos financieros clasificados en la categoría o cartera de “Activos financieros mantenidos para negociar”, ¿cómo han de reconocerse?:",
+  options: [
+    "a. En la Cuenta de Pérdidas y Ganancias los negativos, mientras que los positivos no pueden ser objeto de reconocimiento ya que de hacerlo supondría actuar en contra del principio de prudencia.",
+    "b. No pueden ser objeto de reconocimiento ya que supondría ir en contra del principio de prudencia.",
+    "c. En la Cuenta de Pérdidas y Ganancias del ejercicio en el que tienen lugar.",
+    "d. En cuentas del patrimonio neto en el ejercicio en que tienen lugar."
+  ],
+  correct: "c"
+},
+{
+  question: "Según el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007, los intereses devengados por una inversión en obligaciones, se reconocerán en la cuenta:",
+  options: [
+    "a. “Beneficios por valoración de activos y pasivos financieros a su valor razonable”.",
+    "b. “Beneficios en participaciones y valores representativos de deuda”.",
+    "c. “Otros ingresos financieros”.",
+    "d. “Ingresos de valores representativos de deuda”."
+  ],
+  correct: "d"
+},
+{
+  question: "La cuenta \"Intereses a corto plazo de créditos\" contemplada en el Plan General de Contabilidad 2007 y en el Plan General de Contabilidad de PYMES 2007, representa un:",
+  options: [
+    "a. Activo.",
+    "b. Pasivo no corriente.",
+    "c. Gasto.",
+    "d. Pasivo corriente."
+  ],
+  correct: "a"
+},
+{
+  question: "Según el Plan General de Contabilidad, los pasivos financieros, a efectos de su valoración, se clasificarán en alguna de las siguientes categorías:",
+  options: [
+    "a) Pasivos financieros a coste amortizado, pasivos financieros mantenidos para negociar y pasivos financieros a valor razonable con cambios en la cuenta de pérdidas y ganancias.",
+    "b) Débitos y partidas a pagar, derivados con valoración desfavorable para la empresa, deudas con características especiales, y obligaciones emitidas.",
+    "c) Pasivos financieros a coste amortizado y pasivos financieros a valor razonable con cambios en la cuenta de pérdidas y ganancias.",
+    "d) En valoración inicial todos los pasivos se reconocen sumando la carga financiera al valor de la transacción en el momento de dicha transacción."
+  ],
+  correct: "c"
+},
+{
+  question: "En una operación de intercambio de pasivos:",
+  options: [
+    "a) Aunque las condiciones de los préstamos sean diferentes, no se dará de baja el primitivo para reconocer un nuevo pasivo, sino que se ajustará el importe del original con el nuevo valor del nuevo préstamo.",
+    "b) Si las condiciones no son sustancialmente diferentes, el original no se dará de baja. Las comisiones se tratarán contablemente como un ajuste de valor contable.",
+    "c) Aunque las condiciones no sean sustancialmente diferentes, se dará de baja el original y de registrará el nuevo préstamo. Las comisiones se tratarán contablemente como un ajuste de valor contable.",
+    "d) Si las condiciones son sustancialmente diferentes, el intercambio de pasivos no podrá realizarse."
+  ],
+  correct: "b"
+},
+{
+  question: "En los pasivos financieros a valor razonable (con cambios en la cuenta pérdidas y ganancias), la valoración posterior se realizará a:",
+  options: [
+    "a) Coste amortizado.",
+    "b) Valor razonable y los cambios que se originen con respecto a la valoración inicial, se considerarán pérdida o beneficio en la cuenta de pérdidas y ganancias.",
+    "c) Valor razonable y los cambios que se originen con respecto a la valoración inicial, se considerarán pérdida o beneficio en el patrimonio neto.",
+    "d) A valor nominal en cualquier caso."
+  ],
+  correct: "b"
+},
+{
+  question: "No se puede reclasificar ningún pasivo financiero incluido inicialmente en la categoría de:",
+  options: [
+    "a) Pasivos a Coste Amortizado a Pasivos a Valor Razonable con cambios en la cuenta de PyG",
+    "b) Pasivos a Valor razonable con cambios en la cuenta de PyG a Pasivos a Coste Amortizado",
+    "c) a) y b) son correctas.",
+    "d) Cualquier reclasificación de pasivos es posible dando de baja al pasivo original y registrando el pasivo nuevo por su valor razonable al tipo de interés nominal de mercado."
+  ],
+  correct: "c"
+},
+{
+  question: "Dos pasivos financieros presentan condiciones sustancialmente diferentes a la hora de realizar un intercambio de pasivos si:",
+  options: [
+    "a) El valor actual de los flujos de efectivo derivados de dichos pasivos difieren, al menos, en un 10%.",
+    "b) La suma nominal de los pagos futuros a atender, derivados de dichos pasivos, difieren al menos en un 10%.",
+    "c) Los pasivos financieros son negociados con entidades diferentes con independencia de las condiciones económicas de los mismos.",
+    "d) Los tipos de interés efectivos a los que se negocian, difieren al menos en un 10% entre sí."
+  ],
+  correct: "a"
+},
+{
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) Las deudas por operaciones comerciales no se consideran, a efectos de su valoración contable, como un pasivo financiero.",
+    "b) Los pagos en efectivo de las operaciones comerciales se consideran, a todos los efectos contables, como un pasivo financiero",
+    "c) Se considera que un pasivo financiero se mantiene para negociar, cuando se emite con el propósito de readquirirlo en el corto plazo.",
+    "d) Las deudas por operaciones comerciales con aplazamientos superiores a un año, generarán en todo caso una carga financiera que se reflejará en términos de valor nominal al registrar dicha operación."
+  ],
+  correct: "c"
+},
+{
+  question: "La valoración posterior de los pasivos financieros a Coste Amortizado será:",
+  options: [
+    "a) A valor razonable, Los cambios que se produzcan en el valor razonable se imputarán a la cuenta de pérdidas y ganancias (669. Otros gastos financieros).",
+    "b) A coste amortizado. Los intereses devengados se imputarán a la cuenta de pérdidas y ganancias",
+    "c) A valor razonable. Los cambios que se produzcan en el valor razonable se llevarán a patrimonio hasta su baja o deterioro; entonces se llevarán a pérdidas y ganancias.",
+    "d) A coste amortizado, lo cual significa que los costes iniciales se reflejarán en cuenta de pérdidas y ganancias de forma separada al importe inicial de la transacción."
+  ],
+  correct: "b"
+},
+{
+  question: "En el intercambio de pasivos financieros:",
+  options: [
+    "a) Si el valor actual de los flujos de los pasivos financieros a intercambiar difieren al menos en un 10%, se da de baja el primitivo y se reconoce el nuevo pasivo. Las diferencias se llevan a PyG.",
+    "b) Si el valor actual de los flujos de los pasivos financieros a intercambiar difieren en menos de un 10%, se da de baja el primitivo y se reconoce el nuevo pasivo. Las diferencias se llevan a PyG.",
+    "c) En cualquier caso, aunque esta diferencia no sea superior al 10%, se da de baja el primitivo y se reconoce el nuevo pasivo, llevándose las diferencias a PyG.",
+    "d) Dos pasivos se intercambiarán, si la carga financiera del nuevo pasivo es menor, con lo que los beneficios derivados de la transacción están asegurados."
+  ],
+  correct: "a"
+},
+{
+  question: "La diferencia entre un pasivo financiero y un instrumento de patrimonio propio es:",
+  options: [
+    "a) En el pasivo financiero existe una obligación contractual que recae sobre una de las partes implicadas, mientras que en el instrumento de patrimonio propio no.",
+    "b) En ambos existe una obligación contractual: en el pasivo financiero de devolver el capital y los intereses y en el instrumento de patrimonio propio de pagar dividendos.",
+    "c) a) y b) son correctas.",
+    "d) Los instrumentos de patrimonio generarán flujos de efectivo de intereses periódicos, denominados “cupón”, que se abonarán a los inversores para recompensarlos por los beneficios obtenidos por las empresas."
+  ],
+  correct: "a"
+},
+{
+  question: "Cual de las siguientes afirmaciones es correcta:",
+  options: [
+    "a) En cualquier caso, un instrumento financiero emitido por la empresa que suponga para ella una obligación contractual de entregar efectivo (u otro activo financiero), o de intercambiar instrumentos financieros con terceros en condiciones potencialmente desfavorables, se clasificará como pasivo financiero.",
+    "b) Cualquier deuda tributaria con la Hacienda Pública derivada de una liquidación de impuestos, se clasificará por la empresa como un pasivo financiero, ya que supone una entrega de efectivo.",
+    "c) En los instrumentos de patrimonio propio, como son las acciones ordinarias emitidas por la empresa, se contrae la obligación contractual con los inversores de abonarles unos intereses o dividendos periódicos calculados sobre los valores nominales de sus respectivas inversiones.",
+    "d) Los débitos por fianzas o depósitos recibidos, no se considerarán pasivos financieros en ningún caso, ya que no generan intereses."
+  ],
+  correct: "a"
+},
+{
+  question: "Se consideran instrumentos de patrimonio propio:",
+  options: [
+    "a) Los bonos y pagarés emitidos por la empresa.",
+    "b) Las fianzas y depósitos recibidos.",
+    "c) Las acciones ordinarias emitidas por la empresa.",
+    "d) La compra de moneda extranjera sin aplazamiento"
+  ],
+  correct: "c"
+},
+{
+  question: "En la categoría de Pasivos Financieros a Valor Razonable con cambios en la cuenta de PyG se incluirán:",
+  options: [
+    "a) Los pasivos que, de forma irrevocable, hayan sido designados por la empresa para contabilizarlos a valor razonable con cambios en la cuenta de pérdidas y ganancias.",
+    "b) Los futuros, opciones y permutas financieras, que se hayan designado por la empresa también de forma irrevocable.  Aunque se admiten excepciones incluídas en el PGC.",
+    "c) Las deudas con características especiales.",
+    "d) Las obligaciones y otros valores negociables emitidos por la empresa."
+  ],
+  correct: "a"
+},
+{
+  question: "Con posterioridad a su reconocimiento inicial, la emisión de obligaciones a reembolsar a más de un año, por parte de una empresa emisora se valorará:",
+  options: [
+    "a) A coste amortizado.",
+    "b) A valor de reembolso.",
+    "c) A valor razonable.",
+    "d) Registrando pérdidas o ganancias según la evolución de los mercados y la cotización de los títulos emitidos, que se contabilizarán en cuentas de Patrimonio Neto."
+  ],
+  correct: "a"
+},
+{
+  question: "En una baja o en un intercambio de pasivos financieros, identifique la respuesta incorrecta:",
+  options: [
+    "a) Se podrá dar de baja un pasivo financiero o una parte del mismo, cuando la obligación haya sido satisfecha, cancelada o haya expirado.",
+    "b) Si las condiciones de dos pasivos que se van a intercambiar, son sustancialmente diferentes, el pasivo original se da de baja y se reconoce el nuevo pasivo.",
+    "c) Es posible el intercambio de instrumentos de deuda entre prestamista y prestatario, lo cual se conoce como refinanciación de la deuda.",
+    "d) El test cualitativo consiste en determinar si el valor actual de los flujos de efectivo difiere al menos en un 10% entre los dos pasivos que se vayan a intercambiar."
+  ],
+  correct: "d"
+},
+{
+  question: "En un intercambio de pasivos financieros, existen determinados criterios para evaluar cuándo las condiciones entre ellos son distintas:",
+  options: [
+    "a) Comparando los desembolsos que cada uno de ellos exige en cada momento de pago de principal e intereses.",
+    "b) Si la carga financiera del nuevo pasivo es superior a la que presenta el pasivo viejo, el intercambio no será posible.",
+    "c) El intercambio de pasivos sólo es posible si se hace para extinguir la deuda contraída en un menor plazo o vencimiento, con la consecuente reducción de intereses a soportar.",
+    "d) Antes de contabilizar un intercambio de pasivos, se harán el Test Cuantitativo y el Test Cualitativo, de cuyo resultado las condiciones entre ellos se establecerán como similares o como sustancialmente diferentes, derivándose de lo cual, una contabilización distinta en cada caso."
+  ],
+  correct: "d"
+},
+{
+  question: "Las reservas voluntarias, representan:",
+  options: [
+    "a. Mantenimiento de la liquidez.",
+    "b. Efectivo a disposición de la propiedad.",
+    "c. Efectivo a disposición de los acreedores.",
+    "d. Autofinanciación."
+  ],
+  correct: "d"
+},
+{
+  question: "Según el Plan General de Contabilidad, ¿qué entendemos por remanente?:",
+  options: [
+    "a. El efectivo que queda después de aplicar el resultado.",
+    "b. El efectivo a disposición de los socios.",
+    "c. El resultado contable de los ejercicios anteriores.",
+    "d. Beneficios no repartidos ni aplicados específicamente a ninguna otra cuenta tras aprobarse las cuentas y la distribución de resultados."
+  ],
+  correct: "d"
+},
+{
+  question: "\"Una empresa ha perdido 6.000 u.m. en el ejercicio 200X-2, 4.000 u.m. en el ejercicio   200X-1, y ha obtenido beneficios de 3.000 u.m. en el ejercicio actual 200X.   Al cerrar el ejercicio 200X tan solo ha cancelado pérdidas de años anteriores por 2.000 u.m., destinando el resto del beneficio a repartir dividendos entre los socios\". En relación con lo anterior y de acuerdo con el Plan General de Contabilidad, señala la proposición correcta:",
+  options: [
+    "a. En el balance al cierre del ejercicio 200X ha de reflejar \"Resultados de Ejercicios Anteriores\" por -11.000.",
+    "b. En el balance al cierre del ejercicio 200X ha de reflejar \"Resultados de Ejercicios Anteriores\" por -13.000.",
+    "c. En el balance al cierre del ejercicio 200X ha de reflejar \"Resultados de Ejercicios Anteriores\" por -8.000.",
+    "d. En el balance al cierre del ejercicio 200X ha de reflejar \"Resultados de Ejercicios Anteriores\" por -10.000."
+  ],
+  correct: "c"
+},
+{
+  question: "Las aportaciones de socios para la compensación de pérdidas, ¿qué representan?:",
+  options: [
+    "a. Un pasivo.",
+    "b. Un ingreso.",
+    "c. Un gasto.",
+    "d. Patrimonio neto."
+  ],
+  correct: "d"
+},
+{
+  question: "Señala la proposición correcta con respecto a una subvención reintegrable:",
+  options: [
+    "a. Queda integrada dentro del patrimonio neto en cualquier caso.",
+    "b. Ha de figurar en el balance minorando el patrimonio neto.",
+    "c. Es un pasivo.",
+    "d. Ninguna de las demás opciones es correcta."
+  ],
+  correct: "c"
+},
+{
+  question: "Según el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007, señala la proposición correcta con respecto a una subvención no reintegrable:",
+  options: [
+    "a. Queda integrada dentro del pasivo.",
+    "b. Habrá que reflejar en el Balance dentro del patrimonio neto el importe que, en su caso, quede pendiente de imputar a la Cuenta de Pérdidas y Ganancias.",
+    "c. Ha de ser traspasada en cualquier caso al resultado del ejercicio de su concesión.",
+    "d. Ninguna de las demás opciones es correcta."
+  ],
+  correct: "b"
+},
+{
+  question: "La autocartera, esto es, las acciones o participaciones propias adquiridas por la empresa, han de figurar:",
+  options: [
+    "a. En el patrimonio neto, minorando los Fondos Propios.",
+    "b. En la agrupación \"Inmovilizado intangible”.",
+    "c. Minorando el pasivo corriente o no corriente, según corresponda.",
+    "d. En la agrupación \"Inversiones financieras\" a corto o a largo plazo, según proceda."
+  ],
+  correct: "a"
+},
+{
+  question: "La cuenta \"Dividendo activo a cuenta\", figurará:",
+  options: [
+    "a. En el Patrimonio Neto, minorando los Fondos Propios.",
+    "b. En el epígrafe \"Inversiones financieras a corto plazo\".",
+    "c. En el Pasivo corriente.",
+    "d. Ninguna de las demás opciones es correcta."
+  ],
+  correct: "a"
+},
+{
+  question: "¿Qué tienen en común las cuentas \"Dividendo activo a cuenta\" y \"Resultados negativos de ejercicios anteriores”?:",
+  options: [
+    "a. Ambas presentan saldo deudor, y deberán figurar en el Patrimonio Neto minorando el valor de los Fondos Propios.",
+    "b. Ambas deberán figurar en el activo del balance.",
+    "c. Las dos representan gastos.",
+    "d. Las dos representan deudas."
+  ],
+  correct: "a"
+},
+{
+  question: "Según el Plan General de Contabilidad, la subcuenta \"Socios por desembolsos no exigidos, capital social\", figurará:",
+  options: [
+    "a. En el pasivo corriente.",
+    "b. En el Patrimonio Neto, con signo negativo, minorando la cuenta de “Capital Social”.",
+    "c. En el pasivo no corriente.",
+    "d. En el activo en el epígrafe \"Inversiones Financieras a corto plazo\"."
+  ],
+  correct: "b"
+},
+{
+  question: "Según el Plan General de Contabilidad, ¿en qué cuenta de las que se señalan se reconoce el capital de las entidades sin forma mercantil?:",
+  options: [
+    "a. Capital.",
+    "b. Capital social.",
+    "c. Fondo social.",
+    "d. Ninguna de las demás opciones es correcta."
+  ],
+  correct: "c"
+},
+{
+  question: "“Una empresa recibe en el ejercicio 200X una subvención para financiar un déficit de explotación del ejercicio 200X-1”. Según el Plan General de Contabilidad 2007 ¿en qué cuenta de las que se indican ha de reconocer dicha subvención?:",
+  options: [
+    "a. “Subvenciones, donaciones y legados de capital transferidos al resultado del ejercicio”. Cuenta del grupo 7.",
+    "b. “Subvenciones, donaciones y legados a la explotación”. Cuenta del grupo 7.",
+    "c. En la cuenta correspondiente del subgrupo 13.",
+    "d. “Otras subvenciones, donaciones y legados transferidos al resultado del ejercicio”. Cuenta del grupo 7."
+  ],
+  correct: "b"
+},
+{
+  question: "“Una empresa recibe en el año 200X del Gobierno de Cantabria una subvención no reintegrable para el establecimiento de su estructura fija”. Conforme al Plan General de Contabilidad de PYMES 2007, ¿en qué cuenta de las que se indican ha de reconocer inicialmente dicha subvención en el año 200X?:",
+  options: [
+    "a. “Otras subvenciones, donaciones y legados transferidos al resultado del ejercicio”. Cuenta del grupo 7.",
+    "b. “Subvenciones oficiales de capital”. Cuenta del grupo 9.",
+    "c. “Subvenciones, donaciones y legados de capital transferidos al resultado del ejercicio”. Cuenta del grupo 7.",
+    "d. “Subvenciones, donaciones y legados a la explotación”. Cuenta del grupo 7."
+  ],
+  correct: "b"
+},
+{
+  question: "\"A una empresa le concede el Gobierno de Cantabria una subvención a mediados del año 200X para la adquisición de determinado inmovilizado material amortizable en los años 200X, 200X+1, 200X+2, 200X+3 y 200X+4\". De acuerdo con el Plan General de Contabilidad, ¿qué criterio de imputación de los ingresos a resultados asociados a dicha subvención ha de seguirse?:",
+  options: [
+    "a. Ha de imputarse la totalidad de la subvención a resultados el año 200X.",
+    "b. Ha de imputarse la subvención a resultados en proporción a la amortización dotada los años 200X, 200X+1, 200X+2, 200X+3 y 200X+4, pero no cuando se produzca su enajenación, corrección valorativa por deterioro o baja del balance.",
+    "c. Ha de imputarse la totalidad de la subvención al último año de vida útil del inmovilizado, esto es, al año 200X+4.",
+    "d. Ha de imputarse la subvención a resultados en proporción a la amortización dotada los años 200X, 200X+1, 200X+2, 200X+3 y 200X+4, o en su caso, cuando se produzca su enajenación, corrección valorativa por deterioro o baja del balance."
+  ],
+  correct: "d"
+},
+{
+  question: "\"Una empresa recibió del Gobierno de España en el año 200X una subvención destinada a financiar un programa de I+D+i que generará gastos el propio año 200X y los años 200X+1 y 200X+2\". De acuerdo con el Plan General de Contabilidad 2007 y el Plan General de Contabilidad de PYMES 2007, ¿qué criterio de imputación de los ingresos a resultados asociados a dicha subvención ha de seguirse?:",
+  options: [
+    "a. No puede imputarse la subvención a resultados porque está financiando gastos y sólo cubre las pérdidas provocadas.",
+    "b. Ha de imputarse a resultados la subvención en su totalidad el año en el que finaliza el programa de I+D+i, esto es, el año 200X+2.",
+    "c. Ha de imputarse a resultados la subvención en su totalidad el año de su concesión, esto es, el año 200X.",
+    "d. Ha de imputarse la subvención a resultados los años 200X, 200X+1 y 200X+2, en función del devengo para cada uno de esos años de los gastos que está financiando."
+  ],
+  correct: "d"
+},
+{
+  question: "Una empresa emite 30.000 acciones de un valor nominal cada una de 10 euros. Además, de acuerdo con las condiciones de la emisión, los accionistas entregan a la sociedad 11 euros por cada acción suscrita. Según lo anterior y conforme con el Plan General de Contabilidad, procederá:",
+  options: [
+    "a. Reconocer una reserva legal por 30.000 euros.",
+    "b. Reconocer una prima de emisión por 330.000 euros.",
+    "c. Reconocer una reserva estatutaria por 30.000 euros.",
+    "d. Reconocer una prima de emisión por 30.000 euros."
+  ],
+  correct: "d"
+},
+{
+  question: "Los gastos e ingresos imputados a los grupos 8 y 9:",
+  options: [
+    "a. Se imputan directamente a Patrimonio Neto sin pasar por la cuenta de PYG",
+    "b. Siempre se incluyen en la cuenta de resultados del mismo ejercicio en que se reconozcan",
+    "c. Sólo afectan al Estado de Flujos de Efectivo.",
+    "d. Contribuyen a determinar el resultado extracontable de las empresas."
+  ],
+  correct: "a"
+},
+{
+  question: "El patrimonio neto de la empresa está configurado por:",
+  options: [
+    "a) Únicamente por el capital, las reservas y los rtdos. pendientes de aplicación.",
+    "b) El capital, las reservas, los rtdos. pendientes de aplicación, los ajustes por cambios de valor y las subvenciones, donaciones y legados de carácter no reintegrable.",
+    "c) El capital, las reservas, los rtdos. pendientes de aplicación, los ajustes por cambios de valor y las subvenciones, donaciones y legados de carácter reintegrable.",
+    "d) El capital, las reservas, los rtdos. pendientes de aplicación, los ajustes por cambios de valor y las subvenciones, donaciones y legados de carácter tanto reintegrable como no reintegrable."
+  ],
+  correct: "b"
+},
+{
+  question: "Las subvenciones no reintegrables:",
+  options: [
+    "a) Se imputarán siempre al resultado del ejercicio en el periodo de su obtención.",
+    "b) Cuando se obtengan para adquirir existencias (que no sean rappels comerciales), se imputarán a resultados en el momento de adquisición de dichas existencias.",
+    "c) Cuando se concedan para cancelación de deudas, en general se imputarán como ingresos del ejercicio en que se produzca dicha cancelación, salvo cuando se obtengan en relación con una financiación específica, en cuyo caso la imputación se realizará en función del elemento financiado.",
+    "d) Estarán sujetas a IVA y otros impuestos indirectos."
+  ],
+  correct: "c"
+},
+{
+  question: "La cuanta 103. Socios por desembolsos no exigidos:",
+  options: [
+    "a) Figuraran en el activo del balance, como un derecho de crédito frente a los accionistas por la deuda de la suscripción de  acciones no desembolsada.",
+    "b) Figuraran en el patrimonio neto, con signo negativo, minorando la partida de Capital Social.",
+    "c) Esta cuenta figurará en el patrimonio neto, con signo positivo, aumentando la partida de capital social.",
+    "d) Figurará en el Activo Corriente del balance, porque los socios harán los desembolsos exigidos por la sociedad, de forma inmediata."
+  ],
+  correct: "b"
+},
+{
+  question: "Las reservas de autofinanciación:",
+  options: [
+    "a) Están formadas por beneficios mantenidos en la empresa para incrementar los fondos invertidos y que no han sido incorporados a la cuenta de Capital.",
+    "b) Están formadas por las aportaciones de los socios cuando no se incorporan al capital social, salvo la prima de emisión de acciones.",
+    "c) Están formadas por las aportaciones de los socios cuando no se incorporan al capital social, incluida la prima de emisión de acciones.",
+    "d) Incluye entre sus partidas la Prima de Emisión de acciones."
+  ],
+  correct: "a"
+},
+{
+  question: "Las subvenciones reintegrables procedentes de terceros:",
+  options: [
+    "a) Se reconocerán como pasivos hasta que adquieran la condición de no reintegrables.",
+    "b) Se contabilizarán como ingresos directamente imputados al patrimonio neto y se reconocerán en la cuenta de PyG según base racional.",
+    "c) Se reconocerán como ingresos en la cuenta de PyG según base racional.",
+    "d) Se reconocerán como patrimonio neto en cualquier caso."
+  ],
+  correct: "a"
+},
+{
+  question: "Las subvenciones, donaciones y legados recibidos, no reintegrables, cuando se concedan para financiar gastos específicos:",
+  options: [
+    "a) Se imputarán como ingresos en el ejercicio en que se concedan.",
+    "b) Se imputarán como ingresos en el ejercicio en que se cobren.",
+    "c) Se imputarán como ingresos en el mismo ejercicio en el que se devenguen los gastos que estén financiando.",
+    "d) Se imputarán como ingresos en el ejercicio en que se reconozcan."
+  ],
+  correct: "c"
+},
+{
+  question: "El Capital:",
+  options: [
+    "a) Representa las aportaciones realizadas por los propietarios de la empresa.",
+    "b) Se constituye en el momento inicial de fundación de la sociedad, y se puede ampliar en momentos posteriores.",
+    "c) Garantiza a los acreedores que cobrarán las deudas que la empresa contrajo con ellos.",
+    "d) Todas las respuestas son correctas."
+  ],
+  correct: "d"
+},
+{
+  question: "Señala cuál de las siguientes afirmaciones es correcta.",
+  options: [
+    "a) Según el Plan General de Contabilidad en la cuenta 104 “Socios por aportaciones no dinerarias” se reconoce el capital social pendiente suscripción que corresponde a aportaciones no dinerarias, excepto las aportaciones pendientes que correspondan a instrumentos financieros cuya calificación contable sea la de pasivo financiero.",
+    "b) Según el Plan General de Contabilidad en la cuenta 100 “Capital social” se reconoce el capital social en las sociedades que revistan forma mercantil correspondiente a las acciones emitidas y pendientes de inscripción.",
+    "c) Según el Plan General de Contabilidad en la cuenta 190 “Acciones o participaciones emitidas” se reconoce el capital social y, en su caso, prima de emisión o asunción de acciones o participaciones con naturaleza de patrimonio neto, emitidas y pendientes de suscripción.",
+    "d) La cuenta 101 “Fondo social” representa el capital de las sociedades anónimas."
+  ],
+  correct: "c"
+},
+{
+  question: "Señala cual de las siguientes afirmaciones es correcta.",
+  options: [
+    "a) Según el TRLSA “… una cifra igual al 10% del beneficio del ejercicio se destinará a la reserva legal hasta que esta   alcance, al menos, el 20% del capital social.”",
+    "b) Las subvenciones, donaciones y legados no reintegrables otorgados por terceros distintos a los socios  o  propietarios  se reconocerán inicialmente como pasivos de la empresa.",
+    "c) Las subvenciones, donaciones y legados no reintegrables otorgados por socios o propietarios se registrarán como pasivos de la empresa hasta que adquieran la condición de no reintegrables.",
+    "d) Las aportaciones no monetarias de los socios, se valorarán al precio de adquisición que pagaron los socios cuando las adquirieron en el pasado."
+  ],
+  correct: "a"
+},
+{
+  question: "En una ampliación de capital sobre la par, el importe mínimo a desembolsar por los accionistas en el momento de la suscripción será:",
+  options: [
+    "a. El 15% del importe total suscrito.",
+    "b. El 25% del nominal de las acciones más el 100% de la prima de emisión.",
+    "c. El 25% del nominal de las acciones más el 15% de la prima de emisión.",
+    "d. El 100% del importe suscrito."
+  ],
+  correct: "b"
+},
+{
+  question: "La cuenta 103. Socios por desembolsos no exigidos representa:",
+  options: [
+    "a. El capital social escriturado pendiente de desembolso.",
+    "b. El capital social escriturado pendiente de desembolso con aportaciones no dinerarias.",
+    "c. El capital social pendiente de inscripción en el registro mercantil.",
+    "d. El capital social escriturado exigido a los socios o accionistas."
+  ],
+  correct: "a"
+},
+{
+  question: "Las subvenciones no reintegrables obtenidas sin asignación específica:",
+  options: [
+    "a. En cualquier caso, se imputarán al resultado del ejercicio en que se reciban.",
+    "b. Se imputarán al resultado del ejercicio en que se produzca la cancelación de la deuda.",
+    "c. Se imputarán al resultado del ejercicio en función del coeficiente medio de amortización técnica de los activos de la empresa.",
+    "d. En cualquier caso, se imputarán al Patrimonio Neto de la empresa del ejercicio en que se reciban."
+  ],
+  correct: "a"
+},
+{
+  question: "Las subvenciones no reintegrables:",
+  options: [
+    "a) Se contabilizan como ingresos directamente imputables al Patrimonio Neto y se reconocerán en la cuenta de PYG según base racional.",
+    "b) Son pasivos hasta que se convierten en reintegrables (por el cumplimiento de las condiciones establecidas para la concesión o cuando no existan dudas razonables sobre el cumplimiento futuro, ni sobre la recepción).",
+    "c) Se reconocen en la cuenta de PyG como ingresos y se hará siempre de manera proporcional al tiempo de la vida útil del activo financiado.",
+    "d) Todas las subvenciones recibidas, se transforman con el tiempo en reintegrables mediante su imputación al Patrimonio Neto."
+  ],
+  correct: "b"
+},
+{
+  question: "Al recibir una subvención reintegrable, la empresa:",
+  options: [
+    "a) Si aún no tenemos garantía de cumplir con los requisitos establecidos por la subvención concedida a la empresa, la contabilizaremos en una cuenta del subgrupo 17 \"Deudas a Largo Plazo\", hasta que adquiera la condición de reintegrable. (En concreto a la cuenta 172)",
+    "b) Irá directamente a resultados siempre que provenga de los socios de la empresa.",
+    "c) Si es para gastos generales, la contabilizaremos en el Patrimonio Neto y la imputaremos a resultados en función de la compra de aprovisionamientos que realice la empresa.",
+    "d) La considerará como Activo No Corriente, en cualquier caso."
+  ],
+  correct: "a"
+},
+{
+  question: "La cuenta (110) 'Prima de Emisión':",
+  options: [
+    "a) Cumple la finalidad de conseguir que el valor de la participación que reciben los suscriptores de las nuevas acciones, guarde la debida proporción con el valor de la participación que poseen los antiguos socios.",
+    "b) Procede de beneficios no distribuidos con la intención de incrementar los fondos invertidos en la empresa.",
+    "c) Recoge la aportación realizada por los socios en el caso de emisión y colocación de acciones a un precio inferior a su valor nominal.",
+    "d) Surge en emisiones de acciones por debajo de su valor nominal."
+  ],
+  correct: "a"
+},
+{
+  question: "Cuando una empresa contabiliza una ampliación de capital:",
+  options: [
+    "a) Los gastos de registro suponen una anotación en el Haber de la cuenta de Reservas.",
+    "b) La cuenta (194) 'Capital Pendiente de Inscripción' recoge el valor de emisión de los títulos, considerando en todo caso la cotización real de la emisión.",
+    "c) La cuenta (190) 'Acciones emitidas', se contabiliza siempre por el valor nominal de las acciones sin considerar en ningún caso la cotización real de la emisión.",
+    "d) Los gastos de registro e inscripción suponen un gasto de explotación que se contabilizará en cuenta del grupo 6."
+  ],
+  correct: "b"
+},
+{
+  question: "Las reservas, son recursos financieros que:",
+  options: [
+    "a) Pueden tener diferentes orígenes, aunque todas tienen la característica común de que la sociedad puede disponer de ellas con total libertad.",
+    "b) Se crean en todas las sociedades por disposición estatutaria.",
+    "c) Se crean para la compra de inmovilizados.",
+    "d) Están constituidas por beneficios obtenidos por las empresas y que no han sido distribuidos entre los propietarios."
+  ],
+  correct: "d"
+},
+{
+  question: "El gasto de notaría que se soporta en la constitución de una empresa:",
+  options: [
+    "a) Se imputará directamente al Patrimonio Neto con cargo a reservas voluntarias.",
+    "b) Se contabiliza como gasto de ejercicio en el que se constituye la empresa.",
+    "c) Se contabiliza como activo que se imputa a patrimonio neto proporcionalmente durante la vida de la empresa.",
+    "d) Ninguna de las anteriores es correcta."
+  ],
+  correct: "a"
+},
+{
+  question: "La Prima de emisión de acciones es:",
+  options: [
+    "a) Una reserva de autofinanciación.",
+    "b) Una reserva procedente de ampliaciones de capital.",
+    "c) Una reserva para el mantenimiento efectivo del capital",
+    "d) Una reserva por ajuste de capital."
+  ],
+  correct: "b"
+},
+{
+  question: "Los bienes de inmovilizado recibidos en concepto de aportaciones no dinerarias en ampliaciones de capital, serán valorados:",
+  options: [
+    "a) Por su valor neto contable en el momento de la aportación.",
+    "b) Por su importe recuperable en el momento de la aportación.",
+    "c) Por su valor razonable o valor de mercado en el momento de la aportación.",
+    "d) Por su valor en uso en el momento de la aportación."
+  ],
+  correct: "c"
+},
+{
+  question: "La cuenta 190 'Acciones o participaciones emitidas':",
+  options: [
+    "a) Recoge el valor total de las acciones emitidas, esto es, el valor nominal más, en su caso, la prima de emisión de acciones.",
+    "b) Recoge únicamente el valor nominal de las acciones emitidas.",
+    "c) Recoge únicamente el valor de la prima de emisión de las acciones emitidas.",
+    "d) Recoge valor del 25% del capital emitido más el 100% de la prima de emisión de las acciones."
+  ],
+  correct: "a"
+},
+{
+  question: "¿Cuál de las siguientes reservas es calificada como 'Reserva para mantenimiento efectivo del capital'?:",
+  options: [
+    "a) Reserva estatutaria.",
+    "b) Aportaciones de socios o propietarios.",
+    "c) Reservas para acciones o participaciones de la sociedad dominante.",
+    "d) Reserva voluntaria."
+  ],
+  correct: "c"
+},
+{
+  question: "Si una empresa recibe una subvención para compensar un déficit de explotación:",
+  options: [
+    "a) La imputará como ingreso de dicho ejercicio.",
+    "b) La imputará al resultado del ejercicio, proporcionalmente a criterios racionales.",
+    "c) La imputará a patrimonio neto.",
+    "d) La imputará como dividendos activos a pagar."
+  ],
+  correct: "a"
+},
+{
+  question: "El dividendo pasivo hace referencia a:",
+  options: [
+    "a) La parte del beneficio que será repartida entre los socios por acuerdo de la Junta General.",
+    "b) La parte del capital desembolsado pendiente de inscribir en el Registro Mercantil.",
+    "c) La parte del capital suscrito pendiente de desembolso cuyo importe ha sido exigido a los accionistas.",
+    "d) Los dividendos que la empresa debe a los accionistas."
+  ],
+  correct: "c"
+},
+{
+  question: "En relación a los ingresos que se imputan directamente a Patrimonio Neto sin pasar por la cuenta de Resultados de la empresa:",
+  options: [
+    "a) Al cierre del ejercicio las cuentas del grupo 9 se cargan con abono a las correspondientes cuentas del subgrupo 13.",
+    "b) El PGCE/2007 no permite la existencia de ingresos que se imputen directamente a Patrimonio Neto.",
+    "c) Los ingresos imputados al patrimonio afectan al Resultado del ejercicio en el que se cobren dichos ingresos.",
+    "d) Se reflejarán en cuentas del subgrupo 62."
+  ],
+  correct: "a"
+},
+{
+  question: "Las subvenciones concedidas para asegurar una rentabilidad mínima o compensar déficit de explotación, se imputan:",
+  options: [
+    "a) Como gasto del ejercicio en que se conceden",
+    "b) Como ingreso del ejercicio en la cuenta de pérdidas y ganancias.",
+    "c) Como ingresos en Patrimonio Neto.",
+    "d) No requieren contabilización. Sólo se informará de ellas en la memoria."
+  ],
+  correct: "b"
+},
+{
+  question: "Según establece el marco conceptual de la contabilidad, una subvención no reintegrable de capital debería ser tratada como:",
+  options: [
+    "a) Una partida de pasivo.",
+    "b) Una partida de patrimonio neto.",
+    "c) Una partida de activo.",
+    "d) Una partida de gasto."
+  ],
+  correct: "b"
+}
+
+
+
+
+];
+
+const questionsPerTest = 20; // Total de preguntas en el test
+        const maxScore = 10; // Puntaje máximo posible
+        const pointsPerQuestion = 1 // Puntos por pregunta
+        let availableQuestions = JSON.parse(localStorage.getItem('availableQuestions')) || allQuestions.slice();
+        let shuffledQuestions, currentQuestionIndex;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let answeredCount = 0;
+        let incorrectQuestions = [];
+
+        document.getElementById('available-questions-count').textContent = availableQuestions.length;
+
+        function startTest() {
+            if (availableQuestions.length === 0) {
+                alert('Reiniciando preguntas...');
+                resetQuestions();
+                // Mostrar el botón de inicio después de reiniciar
+                document.getElementById('start-button').style.display = 'block';
+                return; // Salir de la función después de reiniciar
+            }
+            
+
+            correctCount = 0;
+            incorrectCount = 0;
+            answeredCount = 0;
+            incorrectQuestions = [];
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = incorrectCount;
+            document.getElementById('answered-count').textContent = answeredCount;
+            document.getElementById('score-container').style.display = 'none';
+            document.getElementById('incorrect-questions-container').style.display = 'none';
+            document.getElementById('incorrect-questions-list').innerHTML = '';
+            shuffledQuestions = availableQuestions.sort(() => Math.random() - 0.5).slice(0, questionsPerTest);
+            currentQuestionIndex = 0;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            document.getElementById('answer-buttons').style.display = 'none';
+            document.getElementById('author-name').style.display = 'none';
+
+            // Mostrar la primera pregunta del nuevo test
+            showQuestion(shuffledQuestions[currentQuestionIndex]);
+
+            // Mostrar los elementos relevantes para el nuevo test
+            document.getElementById('question-container').style.display = 'block';
+            document.getElementById('question-options').style.display = 'block'
+        }
+
+        function resetQuestions() {
+           alert('Reiniciando preguntas...');
+            availableQuestions = allQuestions.slice();
+            localStorage.setItem('availableQuestions', JSON.stringify(availableQuestions));
+            document.getElementById('available-questions-count').textContent = availableQuestions.length;
+            document.getElementById('start-button').style.display = 'block';
+        }
+
+        function showQuestion(question) {
+            document.getElementById('question').innerText = question.question;
+            document.getElementById('question').style.color = 'white'; // Restaurar el color original
+            const optionsContainer = document.getElementById('question-options');
+            optionsContainer.innerHTML = ''; // Limpiar el contenido anterior
+
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('answer');
+                optionElement.textContent = option;
+                optionElement.setAttribute('data-option', String.fromCharCode(97 + index));
+                optionElement.setAttribute('onclick', `checkAnswer('${String.fromCharCode(97 + index)}')`);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            document.getElementById('answer-buttons').style.display = 'block';
+        }
+
+        function checkAnswer(answer) {
+            const question = shuffledQuestions[currentQuestionIndex];
+            if (answer === question.correct) {
+                document.getElementById('question').style.color = 'green';
+                correctCount += pointsPerQuestion;
+                availableQuestions = availableQuestions.filter(q => q.question !== question.question);
+                localStorage.setItem('availableQuestions', JSON.stringify(availableQuestions));
+                document.getElementById('available-questions-count').textContent = availableQuestions.length;
+            } else {
+                document.getElementById('question').style.color = 'red';
+                incorrectCount++;
+                incorrectQuestions.push({ question: question.question, answer: answer });
+
+                // Resaltar la respuesta correcta
+                const correctOption = document.querySelector(`[data-option="${question.correct}"]`);
+                if (correctOption) {
+                    correctOption.style.backgroundColor = 'green';
+                    correctOption.style.color = 'white';
+                }
+            }
+            answeredCount++;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = incorrectCount;
+            document.getElementById('answered-count').textContent = answeredCount;
+
+            // Deshabilitar las respuestas para esta pregunta
+            const answerButtons = document.querySelectorAll('.answer');
+            answerButtons.forEach(button => {
+                button.onclick = null; // Eliminar el manejador de eventos
+                button.style.cursor = 'default'; // Cambiar el cursor para indicar que está deshabilitado
+            });
+
+            document.getElementById('answer-buttons').style.display = 'none';
+            document.getElementById('next-button').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                showQuestion(shuffledQuestions[currentQuestionIndex]);
+                document.getElementById('question').style.color = 'white';
+                document.getElementById('next-button').style.display = 'none';
+                document.getElementById('answer-buttons').style.display = 'block';
+            } else {
+                let adjustedCorrectCount = correctCount;
+
+                // Calcular penalización por respuestas incorrectas
+                incorrectQuestions.forEach(entry => {
+                    const question = allQuestions.find(q => q.question === entry.question);
+                    const incorrectPenalty = 1 / (question.options.length - 1);
+                    adjustedCorrectCount -= incorrectPenalty;
+                });
+
+                // Calcular la nota final
+                const score = (adjustedCorrectCount / questionsPerTest) * 10;
+
+                document.getElementById('question-container').style.display = 'none'; // Ocultar contenedor de preguntas
+                document.getElementById('question-options').style.display = 'none'; // Ocultar opciones de preguntas
+
+                document.getElementById('question').innerText = `Test terminado. Aciertos: ${correctCount}, Fallos: ${incorrectCount}, Nota: ${score.toFixed(2)}`;
+                document.getElementById('score').textContent = score.toFixed(2);
+                document.getElementById('score-container').style.display = 'block';
+                document.getElementById('next-button').style.display = 'none';
+                document.getElementById('start-button').style.display = 'block';
+                document.getElementById('author-name').style.display = 'block';
+
+                showIncorrectQuestions();
+            }
+        }
+
+        function showIncorrectQuestions() {
+            const incorrectQuestionsContainer = document.getElementById('incorrect-questions-container');
+            const incorrectQuestionsList = document.getElementById('incorrect-questions-list');
+            incorrectQuestions.forEach(entry => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${entry.question} (Tu respuesta: ${entry.answer})`;
+                incorrectQuestionsList.appendChild(listItem);
+            });
+            incorrectQuestionsContainer.style.display = 'block';
+            document.getElementById('answer-buttons').style.display = 'none'; // Asegurarse de ocultar las opciones de respuesta al mostrar las preguntas incorrectas
+            document.getElementById('question-options').style.display = 'none'; // Asegurar que las opciones estén ocultas
+        }
+    </script>
+
+<button id="reset-button" onclick="resetQuestions()">Reiniciar Preguntas</button>
+</body>
+</html>
